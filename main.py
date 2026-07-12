@@ -19,6 +19,9 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 client = OpenAI(api_key=OPENAI_API_KEY)
 
+print("OPENAI =", os.getenv("OPENAI_API_KEY"))
+print("TOKEN =", os.getenv("TELEGRAM_TOKEN"))
+
 # ---------------- DATABASE ----------------
 
 conn = sqlite3.connect("lawai.db", check_same_thread=False)
