@@ -88,9 +88,9 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # ---------------- ІМ'Я ----------------
 
-    if user_text.lower().startswith("мене звати "):
+    if "мене звати " in user_text.lower():
 
-        name = user_text[11:].strip()
+        name = user_text.lower().split("мене звати ", 1)[1].strip().title()
 
         save_name(user_id, name)
 
