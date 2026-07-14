@@ -169,7 +169,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         return
 
-    # ---------- Генерація документів ----------
+        # ---------- Генерація документів ----------
 
     if user_mode.get(user_id) == "generator":
 
@@ -181,34 +181,30 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 }
             ],
             system_prompt=GENERATOR_PROMPT
-    )
+        )
 
-    docx_path = create_docx(
-    "Юридичний документ",
-    answer
-)
+        docx_path = create_docx(
+            "Юридичний документ",
+            answer
+        )
 
-    await update.message.reply_document(
-    document=open(docx_path, "rb"),
-    filename="LawAI_Document.docx",
-    caption="📄 Документ готовий."
-)
+        with open(docx_path, "rb") as f:
+            await update.message.reply_document(
+                document=f,
+                filename="LawAI_Document.docx",
+                caption="📄 Документ готовий."
+            )
 
-    preview = answer[:3500]
+        await update.message.reply_text(
+            "✅ Документ успішно створено.\n\n"
+            "📄 Завантажте файл DOCX вище."
+        )
 
-    if len(answer) > 3500:
-     preview += "\n\n📄 Повний документ додано у файлі DOCX."
+        os.remove(docx_path)
 
-    await update.message.reply_text(
-    "✅ Документ успішно створено.\n\n"
-    "📄 Завантажте файл DOCX вище."
-)
+        user_mode[user_id] = "chat"
 
-    os.remove(docx_path)
-
-    user_mode[user_id] = "chat"
-
-    return
+        return
 
     # ---------- AI ----------
 

@@ -3,16 +3,66 @@ import os
 from telegram import Update
 from telegram.ext import ContextTypes
 
+from docx import Document
+from docx.shared import Pt
+
 from ai import ask_ai
 from documents import extract_text
 from prompts import DOCUMENT_PROMPT
+
+
+def create_analysis_docx(filename: str, content: str) -> str:
+    """
+    Створює DOCX-звіт з юридичним аналізом.
+    """
+
+    os.makedirs("generated", exist_ok=True)
+
+    safe_name = "".join(
+        c if c.isalnum() or c in ("_", "-") else "_"
+        for c in filename
+    )
+
+    path = os.path.join(
+        "generated",
+        f"Analysis_{safe_name}.docx"
+    )
+
+    doc = Document()
+
+    title = doc.add_heading(
+        "Юридичний аналіз документа",
+        level=1
+    )
+
+    for run in title.runs:
+        run.font.size = Pt(18)
+
+    doc.add_paragraph(f"Документ: {filename}")
+
+    doc.add_paragraph()
+
+    doc.add_paragraph(content)
+
+    doc.add_paragraph()
+
+    footer = doc.add_paragraph(
+        "Звіт сформовано LawAI"
+    )
+
+    for run in footer.runs:
+        run.italic = True
+
+    doc.save(path)
+
+    return path
 
 
 async def handle_document(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
 ):
-
+  
     try:
 
         document = update.message.document
@@ -21,12 +71,13 @@ async def handle_document(
             return
 
         await update.message.reply_text(
-            "📄 Документ отримано.\n\nПочинаю аналіз..."
+            "📄 Документ отримано.\n\n"
+            "🔍 Витягую текст..."
         )
 
         os.makedirs("temp", exist_ok=True)
 
-        file = await context.bot.get_file(
+        telegram_file = await context.bot.get_file(
             document.file_id
         )
 
@@ -35,17 +86,24 @@ async def handle_document(
             document.file_name
         )
 
-        await file.download_to_drive(file_path)
+        await telegram_file.download_to_drive(file_path)
 
         text = extract_text(file_path)
 
         if not text:
 
             await update.message.reply_text(
-                "❌ Не вдалося прочитати текст документа."
+                "❌ Не вдалося отримати текст документа."
             )
 
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
             return
+
+        await update.message.reply_text(
+            "⚖️ Аналізую документ..."
+        )
 
         history = [
             {
@@ -60,7 +118,26 @@ async def handle_document(
             DOCUMENT_PROMPT
         )
 
-        await update.message.reply_text(answer)
+        docx_path = create_analysis_docx(
+            document.file_name,
+            answer
+        )
+
+        with open(docx_path, "rb") as f:
+
+            await update.message.reply_document(
+                document=f,
+                filename=os.path.basename(docx_path),
+                caption="📄 Юридичний аналіз готовий"
+            )
+
+        await update.message.reply_text(
+            "✅ Аналіз завершено.\n\n"
+            "DOCX-звіт успішно сформовано."
+        )
+
+        if os.path.exists(docx_path):
+            os.remove(docx_path)
 
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -69,6 +146,9 @@ async def handle_document(
 
         print("DOCUMENT ERROR:", e)
 
-        await update.message.reply_text(
-            f"❌ Помилка:\n{e}"
-        )
+        try:
+            await update.message.reply_text(
+                f"❌ Помилка під час аналізу документа:\n{e}"
+            )
+        except Exception:
+            pass
