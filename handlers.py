@@ -194,7 +194,15 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     caption="📄 Документ готовий."
 )
 
-    await update.message.reply_text(answer)
+    preview = answer[:3500]
+
+    if len(answer) > 3500:
+     preview += "\n\n📄 Повний документ додано у файлі DOCX."
+
+    await update.message.reply_text(
+    "✅ Документ успішно створено.\n\n"
+    "📄 Завантажте файл DOCX вище."
+)
 
     os.remove(docx_path)
 
