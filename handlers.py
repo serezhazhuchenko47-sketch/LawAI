@@ -1,3 +1,8 @@
+import os
+
+from docx import Document
+from docx.shared import Pt
+
 from telegram import Update
 from telegram.ext import ContextTypes
 
@@ -11,6 +16,41 @@ user_history = {}
 
 # Режим роботи користувача
 user_mode = {}
+
+def create_docx(title: str, content: str) -> str:
+
+    os.makedirs("generated", exist_ok=True)
+
+    filename = "".join(
+        c if c.isalnum() else "_"
+        for c in title
+    )
+
+    filename = filename[:40]
+
+    path = f"generated/{filename}.docx"
+
+    doc = Document()
+
+    heading = doc.add_heading(title, level=1)
+
+    for run in heading.runs:
+        run.font.size = Pt(18)
+
+    doc.add_paragraph(content)
+
+    doc.add_paragraph("\n--------------------------------")
+
+    footer = doc.add_paragraph(
+        "Створено за допомогою LawAI"
+    )
+
+    for run in footer.runs:
+        run.italic = True
+
+    doc.save(path)
+
+    return path
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -141,13 +181,26 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 }
             ],
             system_prompt=GENERATOR_PROMPT
-        )
+    )
 
-        await update.message.reply_text(answer)
+    docx_path = create_docx(
+    "Юридичний документ",
+    answer
+)
 
-        user_mode[user_id] = "chat"
+    await update.message.reply_document(
+    document=open(docx_path, "rb"),
+    filename="LawAI_Document.docx",
+    caption="📄 Документ готовий."
+)
 
-        return
+    await update.message.reply_text(answer)
+
+    os.remove(docx_path)
+
+    user_mode[user_id] = "chat"
+
+    return
 
     # ---------- AI ----------
 
