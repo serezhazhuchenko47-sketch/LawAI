@@ -10,6 +10,8 @@ from ai import ask_ai
 from prompts import GENERATOR_PROMPT
 from database import save_name, get_name
 from keyboard import main_keyboard
+from law_search import is_law_request, parse_law_query
+from law_service import law_service
 
 # Історія діалогу
 user_history = {}
@@ -206,6 +208,54 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         return
 
+
+       # ---------- Закони України ----------
+
+    if is_law_request(text):
+
+        law = parse_law_query(text)
+
+        result = law_service.get_article(
+            law["article"],
+            law["codex"]
+        )
+
+        if result is None:
+
+            await update.message.reply_text(
+                "❌ Статтю не знайдено."
+            )
+
+            return
+
+        explanation = ask_ai(
+            [
+                {
+                    "role": "user",
+                    "content":
+                        "Поясни простими словами:\n\n"
+                        + result["text"]
+                }
+            ]
+        )
+
+        message = (
+            f"📚 {result['codex']}\n\n"
+            f"{result['text']}\n\n"
+            f"💡 Пояснення:\n\n"
+            f"{explanation}"
+        )
+
+        MAX = 4000
+
+        for i in range(0, len(message), MAX):
+
+            await update.message.reply_text(
+                message[i:i + MAX]
+            )
+
+        return
+    
     # ---------- AI ----------
 
     user_history[user_id].append(

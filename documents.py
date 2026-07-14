@@ -22,27 +22,37 @@ def extract_text(file_path: str) -> str:
 
         return text.strip()
 
-    elif file_path.lower().endswith(".docx"):
+    if file_path.lower().endswith(".docx"):
 
         doc = Document(file_path)
 
-        return "\n".join(
-            paragraph.text
-            for paragraph in doc.paragraphs
-            if paragraph.text.strip()
-        )
+        paragraphs = []
+
+        for paragraph in doc.paragraphs:
+
+            if paragraph.text.strip():
+                paragraphs.append(paragraph.text)
+
+        return "\n".join(paragraphs)
 
     return ""
 
 
 def analyze_document(text: str) -> str:
+    """
+    Базовий аналіз документа.
+    """
 
-    if not text.strip():
+    text = text.strip()
+
+    if not text:
 
         return "Не вдалося прочитати текст документа."
+
+    words = len(text.split())
 
     return (
         "📄 Документ успішно прочитано.\n\n"
         f"Символів: {len(text)}\n"
-        f"Слів: {len(text.split())}"
+        f"Слів: {words}"
     )

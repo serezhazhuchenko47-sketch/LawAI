@@ -1,4 +1,28 @@
+# Секрети
+.env
+
+# База даних
+lawai.db
+
+# Python
+__pycache__/
+*.pyc
+
+# Тимчасові файли
+temp/
+
+# Логи
+*.log
+
+# VS Code
+.vscode/
+
+# Windows
+Thumbs.db
+Desktop.ini
+
 .env
 lawai.db
+law_cache.db
 __pycache__/
 *.pyc

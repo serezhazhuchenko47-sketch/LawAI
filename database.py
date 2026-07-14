@@ -3,8 +3,13 @@ import sqlite3
 DB_NAME = "lawai.db"
 
 
+def get_connection():
+    return sqlite3.connect(DB_NAME)
+
+
 def init_db():
-    conn = sqlite3.connect(DB_NAME)
+
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -19,14 +24,15 @@ def init_db():
 
 
 def save_name(user_id: int, name: str):
-    conn = sqlite3.connect(DB_NAME)
+
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO users (user_id, name)
-        VALUES (?, ?)
+        INSERT INTO users(user_id, name)
+        VALUES(?, ?)
         ON CONFLICT(user_id)
-        DO UPDATE SET name = excluded.name
+        DO UPDATE SET name=excluded.name
     """, (user_id, name))
 
     conn.commit()
@@ -34,11 +40,12 @@ def save_name(user_id: int, name: str):
 
 
 def get_name(user_id: int):
-    conn = sqlite3.connect(DB_NAME)
+
+    conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT name FROM users WHERE user_id = ?",
+        "SELECT name FROM users WHERE user_id=?",
         (user_id,)
     )
 

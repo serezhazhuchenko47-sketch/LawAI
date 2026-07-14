@@ -1,40 +1,48 @@
 import re
 
-
-CODEX = {
-    "цку": "civil",
-    "кку": "criminal",
-    "купап": "administrative",
-    "конституція": "constitution",
-}
+from codex_registry import CODEXES
 
 
-def parse_query(query: str):
+def parse_law_query(text: str):
     """
-    Розбирає запит типу:
-    ст.1166 ЦКУ
-    стаття 185 ККУ
+    Шукає номер статті та кодекс у повідомленні.
+    Приклад:
+    ст. 1166 ЦКУ
+    стаття 625 Цивільного кодексу
     """
 
-    text = query.lower()
+    text_lower = text.lower()
 
-    article = re.search(r"\d+", text)
+    article_match = re.search(
+        r"(?:ст\.?|стаття)\s*(\d+)",
+        text_lower
+    )
 
-    if not article:
+    if not article_match:
         return None
 
-    article = article.group()
+    article = article_match.group(1)
 
-    codex = None
+    found_codex = None
 
-    for key in CODEX:
+    for key in CODEXES.keys():
 
-        if key in text:
-
-            codex = CODEX[key]
+        if key.lower() in text_lower:
+            found_codex = key
             break
+
+    if not found_codex:
+        return None
 
     return {
         "article": article,
-        "codex": codex,
+        "codex": found_codex
     }
+
+
+def is_law_request(text: str) -> bool:
+    """
+    Перевіряє, чи повідомлення схоже на запит статті закону.
+    """
+
+    return parse_law_query(text) is not None
