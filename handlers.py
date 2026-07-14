@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 
 from ai import ask_ai
+from prompts import GENERATOR_PROMPT
 from database import save_name, get_name
 from keyboard import main_keyboard
 
@@ -125,6 +126,26 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
                 "Я ще не знаю твого імені."
             )
+
+        return
+
+    # ---------- Генерація документів ----------
+
+    if user_mode.get(user_id) == "generator":
+
+        answer = ask_ai(
+            [
+                {
+                    "role": "user",
+                    "content": text
+                }
+            ],
+            system_prompt=GENERATOR_PROMPT
+        )
+
+        await update.message.reply_text(answer)
+
+        user_mode[user_id] = "chat"
 
         return
 

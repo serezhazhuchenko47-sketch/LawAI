@@ -1,6 +1,5 @@
 import logging
 
-from telegram import Update
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -21,57 +20,57 @@ logging.basicConfig(
 )
 
 
-async def error_handler(update: object, context: ContextTypes.DEFAULT_TYPE):
-    logging.exception("Сталася помилка:", exc_info=context.error)
-
-
-# Універсальний дебаггер
-async def debug(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
-    print("=" * 80)
-    print(update)
-    print("=" * 80)
-
-    if update.message and update.message.document:
-        print("Є DOCUMENT")
+async def error_handler(update, context: ContextTypes.DEFAULT_TYPE):
+    logging.exception(
+        "Сталася помилка:",
+        exc_info=context.error
+    )
 
 
 def main():
 
+    # Ініціалізація бази
     init_db()
 
-    app = Application.builder().token(TOKEN).build()
-
-    # /start
-    app.add_handler(CommandHandler("start", start))
-
-    # Дебаг - ловить ВСІ повідомлення
-    app.add_handler(
-        MessageHandler(filters.ALL, debug),
-        group=0
+    # Створення Telegram Application
+    app = (
+        Application
+        .builder()
+        .token(TOKEN)
+        .build()
     )
 
-    # Документи
+    # Команда /start
+    app.add_handler(
+        CommandHandler(
+            "start",
+            start
+        )
+    )
+
+    # PDF / DOCX
     app.add_handler(
         MessageHandler(
             filters.Document.ALL,
-            handle_document,
-        ),
-        group=1
+            handle_document
+        )
     )
 
-    # Текст
+    # Текстові повідомлення
     app.add_handler(
         MessageHandler(
             filters.TEXT & ~filters.COMMAND,
-            message,
-        ),
-        group=1
+            message
+        )
     )
 
+    # Логування помилок
     app.add_error_handler(error_handler)
 
-    print("✅ LawAI Debug Mode запущено...")
+    print("=" * 50)
+    print("⚖️ LawAI v1.0")
+    print("Бот успішно запущений.")
+    print("=" * 50)
 
     app.run_polling()
 
