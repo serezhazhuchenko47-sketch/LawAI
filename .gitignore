@@ -1,28 +1,31 @@
-# Секрети
-.env
-
-# База даних
-lawai.db
-
 # Python
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# Тимчасові файли
+# Virtual Environment
+venv/
+.venv/
+env/
+
+# Environment
+.env
+
+# SQLite
+*.db
+*.sqlite3
+
+# Temporary files
 temp/
-
-# Логи
-*.log
+generated/
 
 # VS Code
 .vscode/
 
-# Windows
-Thumbs.db
-Desktop.ini
+# PyCharm
+.idea/
 
-.env
-lawai.db
-law_cache.db
-__pycache__/
-*.pyc
+# OS
+.DS_Store
+Thumbs.db
