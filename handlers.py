@@ -135,7 +135,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             await update.message.reply_text(
         "👤 Ви ще не зареєструвалися.\n\n"
         "Для реєстрації напишіть:\n"
-        "👉 Мене звати Сергій"
+        "👉 Мене звати Name"
     )
             return
 
