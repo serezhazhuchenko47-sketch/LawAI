@@ -21,7 +21,7 @@ class RadaClient:
         response = requests.get(
             url,
             headers={
-                "User-Agent": "OpenData"
+                "User-Agent": "LawAI"
             },
             timeout=self.timeout
         )
@@ -32,13 +32,13 @@ class RadaClient:
 
     def get_article(self, law_id: str, article: str):
         """
-        Повертає текст статті.
+        Повертає текст статті за ID нормативного акта.
         """
 
         text = self.download_law(law_id)
 
         pattern = (
-            rf"Стаття\s+{article}\.(.*?)(?=\nСтаття\s+\d+\.|\Z)"
+            rf"Стаття\s+{re.escape(article)}\.(.*?)(?=\nСтаття\s+\d+[¹²³⁴⁵⁶⁷⁸⁹⁰-]*\.|\Z)"
         )
 
         match = re.search(

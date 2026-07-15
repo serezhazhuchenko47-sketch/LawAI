@@ -8,10 +8,23 @@ from telegram.ext import ContextTypes
 
 from ai import ask_ai
 from prompts import GENERATOR_PROMPT
-from database import save_name, get_name
+from database import (
+    save_name,
+    get_name,
+    create_user,
+    get_user,
+    get_statistics,
+    get_all_users,
+    increment_consultations,
+    increment_documents_created,
+    increment_documents_checked
+)
+
 from keyboard import main_keyboard
 from law_search import is_law_request, parse_law_query
 from law_service import law_service
+from admin import is_admin
+
 
 # Історія діалогу
 user_history = {}
@@ -56,7 +69,7 @@ def create_docx(title: str, content: str) -> str:
 
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-
+    create_user(update.effective_user.id)
     await update.message.reply_text(
         "👋 Вітаю!\n\n"
         "Я LawAI — юридичний AI-помічник.\n\n"
@@ -68,6 +81,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     user_id = update.effective_user.id
+    create_user(user_id)
     text = update.message.text.strip()
 
     if user_id not in user_history:
@@ -76,7 +90,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     # ---------- Кнопки ----------
 
     if text == "⚖️ Юридична консультація":
-
+        
         user_mode[user_id] = "chat"
 
         await update.message.reply_text(
@@ -112,26 +126,63 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         return
-
+    
     if text == "👤 Мій профіль":
 
-        name = get_name(user_id)
+        user = get_user(user_id)
 
-        if not name:
-            name = "Невідомо"
+        if not user["name"] or user["name"] == "Невідомо":
+            await update.message.reply_text(
+        "👤 Ви ще не зареєструвалися.\n\n"
+        "Для реєстрації напишіть:\n"
+        "👉 Мене звати Сергій"
+    )
+            return
+
+        if user is None:
+            create_user(user_id)
+        user = get_user(user_id)
 
         await update.message.reply_text(
-            f"👤 Ваш профіль\n\n"
-            f"Ім'я: {name}"
-        )
+        "👤 Ваш профіль\n\n"
+        f"🪪 Ім'я: {user['name']}\n"
+        f"⭐ Тариф: {user['tariff']}\n\n"
+        f"📅 Дата реєстрації: {user['register_date']}\n"
+        f"💬 Консультацій: {user['consultations']}\n"
+        f"📄 Створено документів: {user['documents_created']}\n"
+        f"📑 Перевірено документів: {user['documents_checked']}\n"
+        f"🌐 Мова: {user['language']}"
+    )
 
         return
 
     if text == "⭐ LawAI PRO":
-
+        
         await update.message.reply_text(
             "🚀 LawAI PRO скоро стане доступним."
         )
+
+        return
+    
+    if text == "🔐 Адмін-панель":
+
+        if not is_admin(user_id):
+            await update.message.reply_text(
+            "⛔ У вас немає доступу."
+        )
+            return
+
+        stats = get_statistics()
+
+        await update.message.reply_text(
+            "👨‍💼 Панель адміністратора\n\n"
+            f"👥 Користувачів: {stats['users']}\n"
+            f"⭐ PRO: {stats['pro']}\n\n"
+            f"💬 Консультацій: {stats['consultations']}\n"
+            f"📄 Створено документів: {stats['documents_created']}\n"
+            f"📑 Перевірено документів: {stats['documents_checked']}"
+    )
+    
 
         return
 
@@ -203,13 +254,13 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         os.remove(docx_path)
-
+        increment_documents_created(user_id)
         user_mode[user_id] = "chat"
 
         return
 
-
-       # ---------- Закони України ----------
+    
+    # ---------- Старий механізм ----------
 
     if is_law_request(text):
 
@@ -249,13 +300,12 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         MAX = 4000
 
         for i in range(0, len(message), MAX):
-
             await update.message.reply_text(
                 message[i:i + MAX]
             )
 
         return
-    
+
     # ---------- AI ----------
 
     user_history[user_id].append(
@@ -276,4 +326,5 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         }
     )
 
+    increment_consultations(user_id)
     await update.message.reply_text(answer)

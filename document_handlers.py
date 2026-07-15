@@ -9,6 +9,7 @@ from docx.shared import Pt
 from ai import ask_ai
 from documents import extract_text
 from prompts import DOCUMENT_PROMPT
+from database import increment_documents_checked
 
 
 def create_analysis_docx(filename: str, content: str) -> str:
@@ -39,11 +40,8 @@ def create_analysis_docx(filename: str, content: str) -> str:
         run.font.size = Pt(18)
 
     doc.add_paragraph(f"Документ: {filename}")
-
     doc.add_paragraph()
-
     doc.add_paragraph(content)
-
     doc.add_paragraph()
 
     footer = doc.add_paragraph(
@@ -62,7 +60,7 @@ async def handle_document(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
 ):
-  
+
     try:
 
         document = update.message.document
@@ -87,6 +85,21 @@ async def handle_document(
         )
 
         await telegram_file.download_to_drive(file_path)
+
+        # Поки що не підтримуємо старий формат DOC
+        if file_path.lower().endswith(".doc"):
+
+            await update.message.reply_text(
+                "⚠️ Формат DOC поки що не підтримується.\n\n"
+                "Будь ласка, відкрийте документ у Microsoft Word "
+                "або LibreOffice та збережіть його у форматі DOCX "
+                "або PDF."
+            )
+
+            if os.path.exists(file_path):
+                os.remove(file_path)
+
+            return
 
         text = extract_text(file_path)
 
@@ -135,6 +148,8 @@ async def handle_document(
             "✅ Аналіз завершено.\n\n"
             "DOCX-звіт успішно сформовано."
         )
+
+        increment_documents_checked(update.effective_user.id)
 
         if os.path.exists(docx_path):
             os.remove(docx_path)

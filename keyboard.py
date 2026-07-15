@@ -9,6 +9,7 @@ def main_keyboard():
         ["📝 Створити документ"],
         ["📚 Закони України"],
         ["👤 Мій профіль", "⭐ LawAI PRO"],
+        ["🔐 Адмін-панель"]
     ]
 
     return ReplyKeyboardMarkup(
