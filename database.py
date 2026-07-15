@@ -260,24 +260,3 @@ def get_all_users():
     conn.close()
 
     return users
-
-def get_all_users():
-
-    conn = get_connection()
-    cursor = conn.cursor()
-
-    cursor.execute("""
-        SELECT
-            user_id,
-            name,
-            tariff,
-            register_date
-        FROM users
-        ORDER BY register_date
-    """)
-
-    users = cursor.fetchall()
-
-    conn.close()
-
-    return users
