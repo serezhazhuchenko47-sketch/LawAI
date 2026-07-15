@@ -134,14 +134,13 @@ def create_user(user_id: int):
 
 
 def get_user(user_id: int):
-
+    
     conn = get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
     SELECT
         name,
-        history,
         register_date,
         tariff,
         consultations,
@@ -160,13 +159,14 @@ def get_user(user_id: int):
         return None
 
     return {
+    
     "name": row[0] or "Невідомо",
-    "register_date": row[2] or "-",
-    "tariff": row[3] or "FREE",
-    "consultations": row[4] or 0,
-    "documents_created": row[5] or 0,
-    "documents_checked": row[6] or 0,
-    "language": row[7] or "Українська"
+    "register_date": row[1] or "-",
+    "tariff": row[2] or "FREE",
+    "consultations": row[3] or 0,
+    "documents_created": row[4] or 0,
+    "documents_checked": row[5] or 0,
+    "language": row[6] or "Українська"
 }
 
 def increment_consultations(user_id: int):
