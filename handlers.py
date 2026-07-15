@@ -133,9 +133,9 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         if not user["name"] or user["name"] == "Невідомо":
             await update.message.reply_text(
-        "👤 Ви ще не зареєструвалися.\n\n"
-        "Для реєстрації напишіть:\n"
-        "👉 Мене звати ""Name"
+        "👤 Ви ще не завершили реєстрацію.\n\n"
+        "Для реєстрації напишіть:\n\n"
+        "👉 Мене звати (і Ваше ім'я)."
     )
             return
 
