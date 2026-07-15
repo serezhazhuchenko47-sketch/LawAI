@@ -8,6 +8,7 @@ from telegram.ext import ContextTypes
 
 from ai import ask_ai
 from prompts import GENERATOR_PROMPT
+
 from database import (
     save_name,
     get_name,
@@ -20,17 +21,33 @@ from database import (
     increment_documents_checked
 )
 
-from keyboard import main_keyboard
-from law_search import is_law_request, parse_law_query
+from keyboard import (
+    main_keyboard,
+    admin_keyboard
+)
+
+from law_search import (
+    is_law_request,
+    parse_law_query
+)
+
 from law_service import law_service
+
 from admin import is_admin
 
 
-# Історія діалогу
+# -------------------------
+# Історія діалогів
+# -------------------------
+
 user_history = {}
 
+# -------------------------
 # Режим роботи користувача
+# -------------------------
+
 user_mode = {}
+
 
 def create_docx(title: str, content: str) -> str:
 
@@ -39,9 +56,7 @@ def create_docx(title: str, content: str) -> str:
     filename = "".join(
         c if c.isalnum() else "_"
         for c in title
-    )
-
-    filename = filename[:40]
+    )[:40]
 
     path = f"generated/{filename}.docx"
 
@@ -54,7 +69,9 @@ def create_docx(title: str, content: str) -> str:
 
     doc.add_paragraph(content)
 
-    doc.add_paragraph("\n--------------------------------")
+    doc.add_paragraph(
+        "\n--------------------------------"
+    )
 
     footer = doc.add_paragraph(
         "Створено за допомогою LawAI"
@@ -68,29 +85,45 @@ def create_docx(title: str, content: str) -> str:
     return path
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
     create_user(update.effective_user.id)
+
     await update.message.reply_text(
         "👋 Вітаю!\n\n"
         "Я LawAI — юридичний AI-помічник.\n\n"
         "Оберіть потрібний розділ нижче 👇",
-        reply_markup=main_keyboard()
+        reply_markup=main_keyboard(
+            is_admin=is_admin(
+                update.effective_user.id
+            )
+        )
     )
 
 
-async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def message(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
 
     user_id = update.effective_user.id
+
     create_user(user_id)
+
     text = update.message.text.strip()
 
     if user_id not in user_history:
         user_history[user_id] = []
 
-    # ---------- Кнопки ----------
+    # ---------------------------------
+    # Головне меню
+    # ---------------------------------
 
     if text == "⚖️ Юридична консультація":
-        
+
         user_mode[user_id] = "chat"
 
         await update.message.reply_text(
@@ -126,50 +159,67 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         return
-    
+        # ---------------------------------
+    # Профіль
+    # ---------------------------------
+
     if text == "👤 Мій профіль":
 
         user = get_user(user_id)
 
-        if not user["name"] or user["name"] == "Невідомо":
-            await update.message.reply_text(
-        "👤 Ви ще не завершили реєстрацію.\n\n"
-        "Для реєстрації напишіть:\n\n"
-        "👉 Мене звати (і Ваше ім'я)."
-    )
-            return
-
         if user is None:
             create_user(user_id)
-        user = get_user(user_id)
+            user = get_user(user_id)
+
+        if not user["name"] or user["name"] == "Невідомо":
+
+            await update.message.reply_text(
+                "👤 Ви ще не завершили реєстрацію.\n\n"
+                "Для реєстрації напишіть:\n\n"
+                "👉 Мене звати (Ваше ім'я)."
+            )
+
+            return
 
         await update.message.reply_text(
-        "👤 Ваш профіль\n\n"
-        f"🪪 Ім'я: {user['name']}\n"
-        f"⭐ Тариф: {user['tariff']}\n\n"
-        f"📅 Дата реєстрації: {user['register_date']}\n"
-        f"💬 Консультацій: {user['consultations']}\n"
-        f"📄 Створено документів: {user['documents_created']}\n"
-        f"📑 Перевірено документів: {user['documents_checked']}\n"
-        f"🌐 Мова: {user['language']}"
-    )
+            "👤 Ваш профіль\n\n"
+            f"🪪 Ім'я: {user['name']}\n"
+            f"⭐ Тариф: {user['tariff']}\n\n"
+            f"📅 Дата реєстрації: {user['register_date']}\n"
+            f"💬 Консультацій: {user['consultations']}\n"
+            f"📄 Створено документів: {user['documents_created']}\n"
+            f"📑 Перевірено документів: {user['documents_checked']}\n"
+            f"🌐 Мова: {user['language']}"
+        )
 
         return
 
+
+    # ---------------------------------
+    # LawAI PRO
+    # ---------------------------------
+
     if text == "⭐ LawAI PRO":
-        
+
         await update.message.reply_text(
             "🚀 LawAI PRO скоро стане доступним."
         )
 
         return
-    
+
+
+    # ---------------------------------
+    # Адмін-панель
+    # ---------------------------------
+
     if text == "🔐 Адмін-панель":
 
         if not is_admin(user_id):
+
             await update.message.reply_text(
-            "⛔ У вас немає доступу."
-        )
+                "⛔ У вас немає доступу."
+            )
+
             return
 
         stats = get_statistics()
@@ -180,13 +230,59 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"⭐ PRO: {stats['pro']}\n\n"
             f"💬 Консультацій: {stats['consultations']}\n"
             f"📄 Створено документів: {stats['documents_created']}\n"
-            f"📑 Перевірено документів: {stats['documents_checked']}"
-    )
-    
+            f"📑 Перевірено документів: {stats['documents_checked']}",
+            reply_markup=admin_keyboard()
+        )
 
         return
 
-    # ---------- Запам'ятати ім'я ----------
+
+    # ---------------------------------
+    # Список користувачів
+    # ---------------------------------
+
+    if text == "👥 Користувачі":
+
+        if not is_admin(user_id):
+
+            await update.message.reply_text(
+                "⛔ У вас немає доступу."
+            )
+
+            return
+
+        users = get_all_users()
+
+        if not users:
+
+            await update.message.reply_text(
+                "Користувачів поки немає."
+            )
+
+            return
+
+        message = "👥 Зареєстровані користувачі\n\n"
+
+        for i, user in enumerate(users, start=1):
+
+            message += (
+                f"{i}. {user[1] or 'Невідомо'}\n"
+                f"🆔 {user[0]}\n"
+                f"⭐ {user[2]}\n"
+                f"📅 {user[3] or '-'}\n\n"
+            )
+
+        message += (
+            f"Всього користувачів: {len(users)}"
+        )
+
+        await update.message.reply_text(message)
+
+        return
+    
+    # ---------------------------------
+    # Реєстрація
+    # ---------------------------------
 
     if text.lower().startswith("мене звати"):
 
@@ -202,7 +298,10 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         return
 
-    # ---------- Моє ім'я ----------
+
+    # ---------------------------------
+    # Моє ім'я
+    # ---------------------------------
 
     if "як мене звати" in text.lower():
 
@@ -222,7 +321,10 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         return
 
-        # ---------- Генерація документів ----------
+
+    # ---------------------------------
+    # Генерація документів
+    # ---------------------------------
 
     if user_mode.get(user_id) == "generator":
 
@@ -242,6 +344,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         with open(docx_path, "rb") as f:
+
             await update.message.reply_document(
                 document=f,
                 filename="LawAI_Document.docx",
@@ -254,13 +357,16 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
         os.remove(docx_path)
+
         increment_documents_created(user_id)
+
         user_mode[user_id] = "chat"
 
         return
-
     
-    # ---------- Старий механізм ----------
+        # ---------------------------------
+    # Пошук законів
+    # ---------------------------------
 
     if is_law_request(text):
 
@@ -300,13 +406,32 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         MAX = 4000
 
         for i in range(0, len(message), MAX):
+
             await update.message.reply_text(
                 message[i:i + MAX]
             )
 
         return
 
-    # ---------- AI ----------
+
+    # ---------------------------------
+    # Повернення в головне меню
+    # ---------------------------------
+
+    if text == "⬅️ Назад":
+
+        await update.message.reply_text(
+            "🏠 Головне меню",
+            reply_markup=main_keyboard(
+                is_admin=is_admin(user_id)
+            )
+        )
+
+        return
+    
+        # ---------------------------------
+    # AI-консультація
+    # ---------------------------------
 
     user_history[user_id].append(
         {
@@ -327,4 +452,6 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
     increment_consultations(user_id)
+
     await update.message.reply_text(answer)
+    
