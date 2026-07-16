@@ -12,6 +12,7 @@ from config import TOKEN
 from database import init_db
 from handlers import start, message
 from document_handlers import handle_document
+from photo_handlers import handle_photo
 
 
 logging.basicConfig(
@@ -55,6 +56,14 @@ def main():
             handle_document
         )
     )
+
+    # Фото документів
+    app.add_handler(
+    MessageHandler(
+        filters.PHOTO,
+        handle_photo
+    )
+)
 
     # Текстові повідомлення
     app.add_handler(

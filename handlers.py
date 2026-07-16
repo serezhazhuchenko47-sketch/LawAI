@@ -35,8 +35,8 @@ from law_search import (
 )
 
 from law_service import law_service
-
-from admin import is_admin
+from admin import is_admin, broadcast_mode
+from document_handlers import create_docx
 
 
 # -------------------------
@@ -51,6 +51,8 @@ user_history = {}
 
 user_mode = {}
 admin_mode = {}
+document_context = {}
+
 
 
 def create_docx(title: str, content: str) -> str:
@@ -185,15 +187,27 @@ async def message(
 
             return
 
+        tariff_icon = "💎" if user["tariff"] == "PRO" else "⭐"
+
         await update.message.reply_text(
-            "👤 Ваш профіль\n\n"
-            f"🪪 Ім'я: {user['name']}\n"
-            f"⭐ Тариф: {user['tariff']}\n\n"
-            f"📅 Дата реєстрації: {user['register_date']}\n"
-            f"💬 Консультацій: {user['consultations']}\n"
-            f"📄 Створено документів: {user['documents_created']}\n"
-            f"📑 Перевірено документів: {user['documents_checked']}\n"
-            f"🌐 Мова: {user['language']}"
+            "👤 <b>Ваш профіль</b>\n\n"
+
+            f"🆔 <b>ID:</b> <code>{user_id}</code>\n"
+            f"👤 <b>Ім'я:</b> {user['name']}\n"
+            f"{tariff_icon} <b>Тариф:</b> {user['tariff']}\n"
+            f"📅 <b>Дата реєстрації:</b> {user['register_date']}\n\n"
+
+            "━━━━━━━━━━━━━━\n\n"
+
+            f"💬 <b>Консультацій:</b> {user['consultations']}\n"
+            f"📄 <b>Створено документів:</b> {user['documents_created']}\n"
+            f"📑 <b>Перевірено документів:</b> {user['documents_checked']}\n\n"
+
+            "━━━━━━━━━━━━━━\n\n"
+
+            f"🌐 <b>Мова:</b> {user['language']}",
+
+            parse_mode="HTML"
         )
 
         return
@@ -244,14 +258,64 @@ async def message(
     # ---------------------------------
     # LawAI PRO
     # ---------------------------------
-
     if text == "⭐ LawAI PRO":
 
-        await update.message.reply_text(
-            "🚀 LawAI PRO скоро стане доступним."
-        )
+        user = get_user(user_id)
+
+        if user is None:
+            create_user(user_id)
+            user = get_user(user_id)
+
+        if user["tariff"] == "PRO":
+
+            await update.message.reply_text(
+                "💎 <b>LawAI PRO</b>\n\n"
+
+                "Ваш тариф активний.\n\n"
+
+                "Доступно:\n"
+                "✅ Безлімітні юридичні консультації\n"
+                "✅ Аналіз PDF\n"
+                "✅ Аналіз DOCX\n"
+                "✅ Аналіз фотографій\n"
+                "✅ Генерація юридичних документів\n"
+                "✅ Пріоритетна швидкість роботи\n\n"
+
+                "Дякуємо, що користуєтесь LawAI ❤️",
+
+                parse_mode="HTML"
+            )
+
+        else:
+
+            await update.message.reply_text(
+                "⭐ <b>LawAI FREE</b>\n\n"
+
+                "Ваш поточний тариф: <b>FREE</b>\n\n"
+
+                "Доступно:\n"
+                "✅ Юридичні консультації - 100 повідомлень\n"
+                "✅ Аналіз PDF - 3 PDF \n"
+                "✅ Аналіз DOCX - 3 DOCX  \n"
+                "✅ Аналіз фотографій - 3 фотографії \n"
+                "✅ Генерація юридичних документів - 3 генерації\n\n"
+
+                "━━━━━━━━━━━━━━\n\n"
+
+                "💎 <b>LawAI PRO відкриє:</b>\n\n"
+
+                "✔ Безлімітні консультації\n"
+                "✔ Безлімітний аналіз документів\n"
+                "✔ Максимальну швидкість\n"
+                "✔ Доступ до нових функцій\n\n"
+
+                "🚀 Найближчим часом стане доступна можливість оформити підписку PRO.",
+
+                parse_mode="HTML"
+            )
 
         return
+    
 
 
     # ---------------------------------
@@ -267,6 +331,7 @@ async def message(
             )
 
             return
+        
 
         stats = get_statistics()
 
@@ -281,8 +346,58 @@ async def message(
         )
 
         return
+    
+    if text == "📊 Статистика":
 
+        if not is_admin(user_id):
 
+            await update.message.reply_text(
+                "⛔ У вас немає доступу."
+            )
+
+            return
+
+        stats = get_statistics()
+
+        await update.message.reply_text(
+        "📊 <b>Статистика LawAI</b>\n\n"
+
+        "━━━━━━━━━━━━━━\n\n"
+
+        f"👥 <b>Користувачів:</b> {stats['users']}\n"
+        f"⭐ <b>FREE:</b> {stats['users'] - stats['pro']}\n"
+        f"💎 <b>PRO:</b> {stats['pro']}\n\n"
+
+        "━━━━━━━━━━━━━━\n\n"
+
+        f"💬 <b>Консультацій:</b> {stats['consultations']}\n"
+        f"📄 <b>Створено документів:</b> {stats['documents_created']}\n"
+        f"📑 <b>Перевірено документів:</b> {stats['documents_checked']}",
+
+        parse_mode="HTML",
+        reply_markup=admin_keyboard()
+        )
+        return
+
+    if text == "📢 Розсилка":
+
+        if not is_admin(user_id):
+
+            await update.message.reply_text(
+                "⛔ У вас немає доступу."
+            )
+
+            return
+
+        broadcast_mode[user_id] = True
+
+        await update.message.reply_text(
+            "📢 Надішліть текст повідомлення для розсилки.\n\n"
+            "Після цього повідомлення буде надіслано всім користувачам."
+        )
+
+        return
+    
     # ---------------------------------
     # Список користувачів
     # ---------------------------------
@@ -528,10 +643,89 @@ async def message(
 
         return
     
+        
+        # ---------- Завершити роботу з документом ----------
+
+    if text == "❌ Завершити роботу з документом":
+
+        if user_id in document_context:
+
+            document_context.pop(user_id)
+
+            await update.message.reply_text(
+                "✅ Роботу з документом завершено.\n\n"
+                "Тепер можете поставити нове юридичне питання або завантажити інший документ."
+            )
+
+        else:
+
+            await update.message.reply_text(
+                "📄 Зараз немає відкритого документа."
+            )
+
+        return
         # ---------------------------------
+            # ---------- Робота з останнім документом ----------
+
+    if user_id in document_context:
+
+        answer = ask_ai(
+            [
+                {
+                    "role": "system",
+                    "content":
+                        "Ти досвідчений український юрист. "
+                        "Відповідай лише на основі документа користувача. "
+                        "Якщо користувач просить скласти відзив, заперечення, "
+                        "клопотання, апеляційну чи касаційну скаргу або інший "
+                        "процесуальний документ — сформуй його у повному вигляді."
+                },
+                {
+                    "role": "user",
+                    "content":
+                        f"Документ:\n\n{document_context[user_id]}\n\n"
+                        f"Запит:\n{text}"
+                }
+            ]
+        )
+
+        # Якщо користувач просить створити документ
+        if any(word in text.lower() for word in [
+            "напиши відзив",
+            "склади відзив",
+            "напиши клопотання",
+            "склади клопотання",
+            "напиши заяву",
+            "склади заяву",
+            "напиши позов",
+            "склади позов",
+            "апеляційну скаргу",
+            "касаційну скаргу"
+        ]):
+
+            docx_path = create_docx(
+                "Юридичний документ",
+                answer
+            )
+
+            with open(docx_path, "rb") as f:
+
+                await update.message.reply_document(
+                    document=f,
+                    filename="LawAI_Document.docx",
+                    caption="📄 Документ готовий."
+                )
+
+            os.remove(docx_path)
+
+        else:
+
+            await update.message.reply_text(answer)
+
+        return
+    
     # Пошук законів
     # ---------------------------------
-
     if is_law_request(text):
 
         law = parse_law_query(text)
@@ -589,6 +783,47 @@ async def message(
             reply_markup=main_keyboard(
                 is_admin=is_admin(user_id)
             )
+        )
+
+        return
+    
+
+        # ---------------------------------
+    # Розсилка
+    # ---------------------------------
+
+    if user_id in broadcast_mode:
+
+        users = get_all_users()
+
+        success = 0
+        failed = 0
+
+        for user in users:
+
+            try:
+
+                await context.bot.send_message(
+                chat_id=user[0],
+                text=text
+                )
+
+                success += 1
+
+            except Exception as e:
+
+                print(user)
+                print(e)
+
+                failed += 1
+
+        broadcast_mode.pop(user_id)
+
+        await update.message.reply_text(
+            "✅ Розсилку завершено.\n\n"
+            f"👥 Надіслано: {success}\n"
+            f"❌ Помилок: {failed}",
+            reply_markup=admin_keyboard()
         )
 
         return

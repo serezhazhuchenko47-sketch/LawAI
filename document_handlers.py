@@ -10,9 +10,10 @@ from ai import ask_ai
 from documents import extract_text
 from prompts import DOCUMENT_PROMPT
 from database import increment_documents_checked
+import handlers
 
 
-def create_analysis_docx(filename: str, content: str) -> str:
+def create_docx(filename: str, content: str) -> str:
     """
     Створює DOCX-звіт з юридичним аналізом.
     """
@@ -102,6 +103,7 @@ async def handle_document(
             return
 
         text = extract_text(file_path)
+        handlers.document_context[update.effective_user.id] = text
 
         if not text:
 
@@ -131,7 +133,7 @@ async def handle_document(
             DOCUMENT_PROMPT
         )
 
-        docx_path = create_analysis_docx(
+        docx_path = create_docx(
             document.file_name,
             answer
         )
