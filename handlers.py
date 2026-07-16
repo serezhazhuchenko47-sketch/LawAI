@@ -324,28 +324,20 @@ async def message(
 
     if text == "🔐 Адмін-панель":
 
-        if not is_admin(user_id):
+            if not is_admin(user_id):
+
+                await update.message.reply_text(
+                    "⛔ У вас немає доступу."
+                )
+
+                return
 
             await update.message.reply_text(
-                "⛔ У вас немає доступу."
-            )
+        "👨‍💼 Панель адміністратора",
+        reply_markup=admin_keyboard()
+    )
 
             return
-        
-
-        stats = get_statistics()
-
-        await update.message.reply_text(
-            "👨‍💼 Панель адміністратора\n\n"
-            f"👥 Користувачів: {stats['users']}\n"
-            f"⭐ PRO: {stats['pro']}\n\n"
-            f"💬 Консультацій: {stats['consultations']}\n"
-            f"📄 Створено документів: {stats['documents_created']}\n"
-            f"📑 Перевірено документів: {stats['documents_checked']}",
-            reply_markup=admin_keyboard()
-        )
-
-        return
     
     if text == "📊 Статистика":
 
