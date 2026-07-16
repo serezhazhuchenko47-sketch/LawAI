@@ -729,7 +729,7 @@ async def message(
     if is_law_request(text):
 
         law = parse_law_query(text)
-
+        print(law)  
         result = law_service.get_article(
             law["article"],
             law["codex"]
@@ -738,7 +738,10 @@ async def message(
         if result is None:
 
             await update.message.reply_text(
-                "❌ Статтю не знайдено."
+                "⚠️ Не вдалося отримати текст закону.\n\n"
+                "Сервіс законодавства Верховної Ради тимчасово недоступний "
+                "або статтю не знайдено.\n"
+                "Будь ласка, спробуйте пізніше."
             )
 
             return

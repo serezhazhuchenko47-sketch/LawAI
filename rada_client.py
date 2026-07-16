@@ -9,26 +9,33 @@ class RadaClient:
     def __init__(self, timeout=30):
         self.timeout = timeout
 
-    def download_law(self, law_id: str) -> str:
+    def download_law(self, law_id: str):
         """
-        Завантажує офіційний текст закону у форматі TXT.
-        Приклад:
-        435-15 -> ЦК України
+        Завантажує офіційний текст закону.
+        Якщо сайт Ради недоступний — повертає None.
         """
 
         url = f"{self.BASE_URL}/{law_id}.txt"
 
-        response = requests.get(
-            url,
-            headers={
-                "User-Agent": "LawAI"
-            },
-            timeout=self.timeout
-        )
+        try:
 
-        response.raise_for_status()
+            response = requests.get(
+                url,
+                headers={
+                    "User-Agent": "LawAI"
+                },
+                timeout=self.timeout
+            )
 
-        return response.text
+            response.raise_for_status()
+
+            return response.text
+
+        except requests.RequestException as e:
+
+            print(f"RADA ERROR: {e}")
+
+            return None
 
     def get_article(self, law_id: str, article: str):
         """
@@ -36,6 +43,9 @@ class RadaClient:
         """
 
         text = self.download_law(law_id)
+
+        if text is None:
+            return None
 
         pattern = (
             rf"Стаття\s+{re.escape(article)}\.(.*?)(?=\nСтаття\s+\d+[¹²³⁴⁵⁶⁷⁸⁹⁰-]*\.|\Z)"

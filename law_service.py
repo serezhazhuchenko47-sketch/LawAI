@@ -17,12 +17,16 @@ class LawService:
         # Поки що підтримуємо лише ЦК України
         law_id = "435-15"
 
+        print("CODEX:", codex)
+        print("LAW_ID:", law_id)
+        print("ARTICLE:", article)
+
         article_text = rada.get_article(
             law_id,
             article
         )
 
-        if not article_text:
+        if article_text is None:
             return None
 
         return {

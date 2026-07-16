@@ -14,14 +14,14 @@ def parse_law_query(text: str):
     text_lower = text.lower()
 
     article_match = re.search(
-        r"(?:ст\.?|стаття)\s*(\d+)",
-        text_lower
+    r"(?:ст\.?|стаття)\s*(\d+)|(\d+)\s*статт[іяєї]*",
+    text_lower
     )
 
     if not article_match:
         return None
 
-    article = article_match.group(1)
+    article = article_match.group(1) or article_match.group(2)
 
     found_codex = None
 
