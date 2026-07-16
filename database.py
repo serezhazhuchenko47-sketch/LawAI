@@ -25,6 +25,17 @@ def init_db():
         )
     """)
 
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS cases (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            title TEXT NOT NULL,
+            description TEXT,
+            created_at TEXT,
+            FOREIGN KEY(user_id) REFERENCES users(user_id)
+    )
+    """)
+    
     # Якщо база вже існувала — додаємо відсутні колонки
     columns = [
         ("register_date", "TEXT"),

@@ -9,6 +9,12 @@ from telegram.ext import ContextTypes
 from ai import ask_ai
 from prompts import GENERATOR_PROMPT
 
+from keyboard import (
+    main_keyboard,
+    admin_keyboard,
+    cases_keyboard
+)
+
 from database import (
     save_name,
     get_name,
@@ -37,6 +43,7 @@ from law_search import (
 from law_service import law_service
 from admin import is_admin, broadcast_mode
 from document_handlers import create_docx
+from cases import case_service
 
 
 # -------------------------
@@ -52,6 +59,7 @@ user_history = {}
 user_mode = {}
 admin_mode = {}
 document_context = {}
+creating_case = {}
 
 
 
@@ -165,7 +173,36 @@ async def message(
         )
 
         return
-        # ---------------------------------
+    #-------------------------------
+    # Мої папки
+    #-------------------------------
+    if text == "📂 Мої справи":
+
+        cases = case_service.get_cases(user_id)
+
+        if not cases:
+
+            await update.message.reply_text(
+                "📂 У вас поки що немає створених справ.",
+                reply_markup=cases_keyboard()
+            )
+
+            return
+
+        message = "📂 Ваші справи:\n\n"
+
+        for case in cases:
+
+            message += f"📁 {case[1]}\n"
+
+        await update.message.reply_text(
+            message,
+            reply_markup=cases_keyboard()
+        )
+
+        return
+    
+    # ---------------------------------
     # Профіль
     # ---------------------------------
 
@@ -294,22 +331,15 @@ async def message(
                 "Ваш поточний тариф: <b>FREE</b>\n\n"
 
                 "Доступно:\n"
-                "✅ Юридичні консультації - 100 повідомлень\n"
-                "✅ Аналіз PDF - 3 PDF \n"
-                "✅ Аналіз DOCX - 3 DOCX  \n"
-                "✅ Аналіз фотографій - 3 фотографії \n"
-                "✅ Генерація юридичних документів - 3 генерації\n\n"
+                "✅ Юридичні консультації\n"
+                "✅ Аналіз PDF \n"
+                "✅ Аналіз DOCX\n"
+                "✅ Аналіз фотографій\n"
+                "✅ Генерація юридичних документів\n\n"
 
                 "━━━━━━━━━━━━━━\n\n"
 
-                "💎 <b>LawAI PRO відкриє:</b>\n\n"
-
-                "✔ Безлімітні консультації\n"
-                "✔ Безлімітний аналіз документів\n"
-                "✔ Максимальну швидкість\n"
-                "✔ Доступ до нових функцій\n\n"
-
-                "🚀 Найближчим часом стане доступна можливість оформити підписку PRO.",
+                "💎 <b>LawAI PRO буде доступний найближчим часом! </b>\n\n",
 
                 parse_mode="HTML"
             )
@@ -823,7 +853,37 @@ async def message(
 
         return
     
-        # ---------------------------------
+    if text == "➕ Створити справу":
+
+        creating_case[user_id] = True
+        await update.message.reply_text(
+            "📝 Введіть назву нової справи."
+        )
+        return
+    
+    if creating_case.get(user_id):  
+
+        case_service.create_case(
+            user_id,
+            text
+        )
+
+        creating_case.pop(user_id)
+
+        cases = case_service.get_cases(user_id)
+
+        message = "📂 Ваші справи\n\n"
+
+        for case in cases:
+            message += f"📁 {case[1]}\n"
+
+        await update.message.reply_text(
+            message,
+            reply_markup=cases_keyboard()
+        )
+
+        return
+    # ---------------------------------
     # AI-консультація
     # ---------------------------------
 

@@ -7,12 +7,13 @@ from telegram import ReplyKeyboardMarkup
 def main_keyboard(is_admin=False):
 
     keyboard = [
+        ["📂 Мої справи"],
         ["⚖️ Юридична консультація"],
         ["📄 Перевірити документ"],
         ["📝 Створити документ"],
         ["📚 Закони України"],
         ["❌ Завершити роботу з документом"],
-        ["👤 Мій профіль", "⭐ LawAI PRO"]
+        ["👤 Мій профіль", "⭐ LawAI PRO"],
     ]
 
     if is_admin:
@@ -23,6 +24,17 @@ def main_keyboard(is_admin=False):
         resize_keyboard=True
     )
 
+def cases_keyboard():
+
+    keyboard = [
+        ["➕ Створити справу"],
+        ["⬅️ Назад"]
+    ]
+
+    return ReplyKeyboardMarkup(
+        keyboard,
+        resize_keyboard=True
+    )
 
 def admin_keyboard():
 
