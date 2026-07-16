@@ -1,6 +1,6 @@
 import re
 
-from codex_registry import CODEXES
+
 
 
 def parse_law_query(text: str):
@@ -25,15 +25,7 @@ def parse_law_query(text: str):
 
     found_codex = None
 
-    for key in CODEXES.keys():
-
-        if key.lower() in text_lower:
-            found_codex = key
-            break
-
-    if not found_codex:
-        return None
-
+    
     return {
         "article": article,
         "codex": found_codex

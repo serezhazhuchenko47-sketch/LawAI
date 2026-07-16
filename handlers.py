@@ -43,7 +43,7 @@ from law_search import (
 from law_service import law_service
 from admin import is_admin, broadcast_mode
 from document_handlers import create_docx
-from cases import case_service
+
 
 
 # -------------------------
@@ -59,7 +59,7 @@ user_history = {}
 user_mode = {}
 admin_mode = {}
 document_context = {}
-creating_case = {}
+
 
 
 
@@ -129,6 +129,30 @@ async def message(
 
     text = update.message.text.strip()
 
+# ---------------------------------
+
+    # Повернення в головне меню
+
+    # ---------------------------------
+
+    if text == "⬅️ Назад":
+
+
+
+        await update.message.reply_text(
+
+            "🏠 Головне меню",
+
+            reply_markup=main_keyboard(
+
+                is_admin=is_admin(user_id)
+
+            )
+
+        )
+
+        return
+
     if user_id not in user_history:
         user_history[user_id] = []
 
@@ -173,35 +197,6 @@ async def message(
         )
 
         return
-    #-------------------------------
-    # Мої папки
-    #-------------------------------
-    if text == "📂 Мої справи":
-
-        cases = case_service.get_cases(user_id)
-
-        if not cases:
-
-            await update.message.reply_text(
-                "📂 У вас поки що немає створених справ.",
-                reply_markup=cases_keyboard()
-            )
-
-            return
-
-        message = "📂 Ваші справи:\n\n"
-
-        for case in cases:
-
-            message += f"📁 {case[1]}\n"
-
-        await update.message.reply_text(
-            message,
-            reply_markup=cases_keyboard()
-        )
-
-        return
-    
     # ---------------------------------
     # Профіль
     # ---------------------------------
@@ -797,23 +792,9 @@ async def message(
         return
 
 
-    # ---------------------------------
-    # Повернення в головне меню
-    # ---------------------------------
-
-    if text == "⬅️ Назад":
-
-        await update.message.reply_text(
-            "🏠 Головне меню",
-            reply_markup=main_keyboard(
-                is_admin=is_admin(user_id)
-            )
-        )
-
-        return
     
 
-        # ---------------------------------
+    # ---------------------------------
     # Розсилка
     # ---------------------------------
 
@@ -852,60 +833,37 @@ async def message(
         )
 
         return
-    
-    if text == "➕ Створити справу":
 
-        creating_case[user_id] = True
-        await update.message.reply_text(
-            "📝 Введіть назву нової справи."
-        )
-        return
-    
-    if creating_case.get(user_id):  
 
-        case_service.create_case(
-            user_id,
-            text
-        )
-
-        creating_case.pop(user_id)
-
-        cases = case_service.get_cases(user_id)
-
-        message = "📂 Ваші справи\n\n"
-
-        for case in cases:
-            message += f"📁 {case[1]}\n"
-
-        await update.message.reply_text(
-            message,
-            reply_markup=cases_keyboard()
-        )
-
-        return
-    # ---------------------------------
+   # ---------------------------------
     # AI-консультація
     # ---------------------------------
 
-    user_history[user_id].append(
-        {
-            "role": "user",
-            "content": text
-        }
-    )
+    if user_mode.get(user_id) == "chat":
 
-    answer = ask_ai(
-        user_history[user_id][-20:]
-    )
 
-    user_history[user_id].append(
-        {
-            "role": "assistant",
-            "content": answer
-        }
-    )
+        user_history[user_id].append(
+            {
+                "role": "user",
+                "content": text
+            }
+        )
+
+        answer = ask_ai(
+            user_history[user_id][-20:]
+        )
+
+        user_history[user_id].append(
+            {
+                "role": "assistant",
+                "content": answer
+            }
+        )
 
     increment_consultations(user_id)
 
     await update.message.reply_text(answer)
-    
+
+    return
+
+  
