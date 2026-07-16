@@ -169,6 +169,42 @@ def get_user(user_id: int):
     "language": row[6] or "Українська"
 }
 
+def get_tariff(user_id: int):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        SELECT tariff
+        FROM users
+        WHERE user_id=?
+    """, (user_id,))
+
+    row = cursor.fetchone()
+
+    conn.close()
+
+    if row is None:
+        return None
+
+    return row[0]
+
+def user_exists(user_id: int) -> bool:
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute(
+        "SELECT 1 FROM users WHERE user_id=?",
+        (user_id,)
+    )
+
+    exists = cursor.fetchone() is not None
+
+    conn.close()
+
+    return exists
+
 def increment_consultations(user_id: int):
 
     conn = get_connection()
@@ -260,3 +296,17 @@ def get_all_users():
     conn.close()
 
     return users
+
+def set_tariff(user_id: int, tariff: str):
+
+    conn = get_connection()
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        UPDATE users
+        SET tariff=?
+        WHERE user_id=?
+    """, (tariff, user_id))
+
+    conn.commit()
+    conn.close()

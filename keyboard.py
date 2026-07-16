@@ -42,14 +42,12 @@ from telegram import ReplyKeyboardMarkup
 
 def admin_keyboard():
 
-    keyboard = [
-        ["👥 Користувачі", "📊 Статистика"],
-        ["⭐ Видати PRO", "❌ Забрати PRO"],
-        ["📢 Розсилка"],
-        ["⬅️ Назад"]
-    ]
-
     return ReplyKeyboardMarkup(
-        keyboard,
+        [
+            ["👥 Користувачі", "📊 Статистика"],
+            ["⭐ Видати PRO", "❌ Забрати PRO"],
+            ["📢 Розсилка"],
+            ["⬅️ Назад"]
+        ],
         resize_keyboard=True
     )

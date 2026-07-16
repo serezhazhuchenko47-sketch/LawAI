@@ -18,7 +18,10 @@ from database import (
     get_all_users,
     increment_consultations,
     increment_documents_created,
-    increment_documents_checked
+    increment_documents_checked,
+    set_tariff,
+    user_exists,
+    get_tariff,
 )
 
 from keyboard import (
@@ -47,6 +50,7 @@ user_history = {}
 # -------------------------
 
 user_mode = {}
+admin_mode = {}
 
 
 def create_docx(title: str, content: str) -> str:
@@ -193,8 +197,50 @@ async def message(
         )
 
         return
+    
+    # ---------------------------------
+    # Видати PRO
+    # ---------------------------------
 
+    if text == "⭐ Видати PRO":
 
+        if not is_admin(user_id):
+
+            await update.message.reply_text(
+                "⛔ У вас немає доступу."
+            )
+
+            return
+
+        admin_mode[user_id] = "give_pro"
+
+        await update.message.reply_text(
+            "Введіть Telegram ID користувача:"
+        )
+
+        return
+
+    # ---------------------------------
+    # Забрати PRO
+    # ---------------------------------
+
+    if text == "❌ Забрати PRO":
+
+        if not is_admin(user_id):
+
+            await update.message.reply_text(
+                "⛔ У вас немає доступу."
+            )
+
+            return
+
+        admin_mode[user_id] = "remove_pro"
+
+        await update.message.reply_text(
+            "Введіть Telegram ID користувача:"
+        )
+
+        return
     # ---------------------------------
     # LawAI PRO
     # ---------------------------------
@@ -321,7 +367,125 @@ async def message(
 
         return
 
+        # ---------------------------------
+    # Очікування ID для видачі PRO
+    # ---------------------------------
 
+    if admin_mode.get(user_id) == "give_pro":
+
+        if not text.isdigit():
+
+            await update.message.reply_text(
+                "❌ Telegram ID повинен містити лише цифри."
+            )
+
+            return
+
+        target_user = int(text)
+
+        if not user_exists(target_user):
+
+            await update.message.reply_text(
+                "❌ Користувача з таким ID не знайдено."
+            )
+
+            admin_mode.pop(user_id)
+
+            return
+
+        if get_tariff(target_user) == "PRO":
+
+            await update.message.reply_text(
+                "ℹ️ Користувач уже має тариф PRO."
+            )
+
+            admin_mode.pop(user_id)
+
+            return
+        
+        set_tariff(target_user, "PRO")
+
+        await update.message.reply_text(
+            f"✅ Користувачу {target_user} успішно видано тариф PRO."
+        )
+
+        try:
+
+            await context.bot.send_message(
+                chat_id=target_user,
+                text=(
+                    "🎉 Вітаємо!\n\n"
+                    "Вам активовано тариф ⭐ LawAI PRO.\n\n"
+                    "Дякуємо, що користуєтесь LawAI!"
+                )
+            )
+
+        except Exception:
+            pass
+
+        admin_mode.pop(user_id)
+
+        return
+    
+        # ---------------------------------
+    # Очікування ID для забирання PRO
+    # ---------------------------------
+
+    if admin_mode.get(user_id) == "remove_pro":
+
+        if not text.isdigit():
+
+            await update.message.reply_text(
+                "❌ Telegram ID повинен містити лише цифри."
+            )
+
+            return
+
+        target_user = int(text)
+
+        if not user_exists(target_user):
+
+            await update.message.reply_text(
+                "❌ Користувача з таким ID не знайдено."
+            )
+
+            admin_mode.pop(user_id)
+
+            return
+
+        if get_tariff(target_user) != "PRO":
+
+            await update.message.reply_text(
+                "ℹ️ Користувач не має тарифу PRO."
+            )
+
+            admin_mode.pop(user_id)
+
+            return
+        
+        set_tariff(target_user, "FREE")
+
+        await update.message.reply_text(
+            f"✅ У користувача {target_user} успішно забрано тариф PRO."
+        )
+
+        try:
+
+            await context.bot.send_message(
+                chat_id=target_user,
+                text=(
+                    "ℹ️ Ваш тариф змінено.\n\n"
+                    "Тепер у вас тариф FREE."
+                )
+            )
+
+        except Exception:
+            pass
+
+        admin_mode.pop(user_id)
+
+        return
+    
     # ---------------------------------
     # Генерація документів
     # ---------------------------------
