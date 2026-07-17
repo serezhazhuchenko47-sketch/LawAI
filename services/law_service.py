@@ -33,6 +33,34 @@ class LawService:
             return None
 
         print(f"Article st{article_number} found")
+        from bs4 import Tag
 
+        text_parts = []
+
+        node = start.parent
+
+        
+        while node:
+
+            if isinstance(node, Tag):
+
+            # Якщо почалась наступна стаття — закінчуємо
+                anchor = node.find("a", attrs={"data-tree": True})
+
+            if (
+                anchor
+                and anchor.get("data-tree", "").startswith("st")
+                and anchor.get("data-tree") != f"st{article_number}"
+            ):
+                break
+
+            text = node.get_text(" ", strip=True)
+
+            if text:
+                text_parts.append(text)
+
+            node = node.find_next_sibling()
+
+        return "\n\n".join(text_parts)
 
 law_service = LawService()

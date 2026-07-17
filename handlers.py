@@ -701,12 +701,13 @@ async def message(
 
         law = parse_law_query(text)
         print(law)
+
         result = await asyncio.to_thread(
             legislation_service.get_article,
             law["article"],
             law["codex"]
             )
-
+        print("RESULT:", result)
         if result is None:
 
             await update.message.reply_text(
