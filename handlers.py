@@ -5,7 +5,7 @@ from docx.shared import Pt
 
 from telegram import Update
 from telegram.ext import ContextTypes
-
+import asyncio
 from ai import ask_ai
 from prompts import GENERATOR_PROMPT
 
@@ -34,9 +34,9 @@ from law_search import (
     parse_law_query
 )
 
-from law_service import law_service
 from admin import is_admin, broadcast_mode
 from document_handlers import create_docx
+from services.legislation_service import legislation_service
 
 
 
@@ -697,23 +697,20 @@ async def message(
     # --------------------------------
     # Пошук законів
     # ---------------------------------
-
     if is_law_request(text):
 
         law = parse_law_query(text)
-        print(law)  
-        result = law_service.get_article(
+        print(law)
+        result = await asyncio.to_thread(
+            legislation_service.get_article,
             law["article"],
             law["codex"]
-        )
+            )
 
         if result is None:
 
             await update.message.reply_text(
-                "⚠️ Не вдалося отримати текст закону.\n\n"
-                "Сервіс законодавства Верховної Ради тимчасово недоступний "
-                "або статтю не знайдено.\n"
-                "Будь ласка, спробуйте пізніше."
+                "❌ Документ або статтю не знайдено."
             )
 
             return
@@ -723,16 +720,20 @@ async def message(
                 {
                     "role": "user",
                     "content":
-                        "Поясни простими словами:\n\n"
-                        + result["text"]
+                        (
+                            "Поясни простими словами цю норму права. "
+                            "Не змінюй її зміст. "
+                            "Наведи практичне пояснення.\n\n"
+                            + result["text"]
+                        )
                 }
             ]
         )
 
         message = (
-            f"📚 {result['codex']}\n\n"
+            f"📚 <b>{result['title']}</b>\n\n"
             f"{result['text']}\n\n"
-            f"💡 Пояснення:\n\n"
+            f"💡 <b>Пояснення LawAI:</b>\n\n"
             f"{explanation}"
         )
 
@@ -741,7 +742,8 @@ async def message(
         for i in range(0, len(message), MAX):
 
             await update.message.reply_text(
-                message[i:i + MAX]
+                message[i:i + MAX],
+                parse_mode="HTML"
             )
 
         return
