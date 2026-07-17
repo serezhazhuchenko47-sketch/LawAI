@@ -34,7 +34,7 @@ class PlaywrightService:
                 page.wait_for_timeout(2000)
 
                 html = page.content()
-
+                print(f"HTML length: {len(html)}")
                 browser.close()
 
                 return html
