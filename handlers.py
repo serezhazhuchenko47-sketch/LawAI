@@ -9,12 +9,6 @@ from telegram.ext import ContextTypes
 from ai import ask_ai
 from prompts import GENERATOR_PROMPT
 
-from keyboard import (
-    main_keyboard,
-    admin_keyboard,
-    cases_keyboard
-)
-
 from database import (
     save_name,
     get_name,
@@ -61,44 +55,6 @@ admin_mode = {}
 document_context = {}
 
 
-
-
-def create_docx(title: str, content: str) -> str:
-
-    os.makedirs("generated", exist_ok=True)
-
-    filename = "".join(
-        c if c.isalnum() else "_"
-        for c in title
-    )[:40]
-
-    path = f"generated/{filename}.docx"
-
-    doc = Document()
-
-    heading = doc.add_heading(title, level=1)
-
-    for run in heading.runs:
-        run.font.size = Pt(18)
-
-    doc.add_paragraph(content)
-
-    doc.add_paragraph(
-        "\n--------------------------------"
-    )
-
-    footer = doc.add_paragraph(
-        "Створено за допомогою LawAI"
-    )
-
-    for run in footer.runs:
-        run.italic = True
-
-    doc.save(path)
-
-    return path
-
-
 async def start(
     update: Update,
     context: ContextTypes.DEFAULT_TYPE
@@ -129,26 +85,21 @@ async def message(
 
     text = update.message.text.strip()
 
-# ---------------------------------
-
+    # ---------------------------------
     # Повернення в головне меню
-
     # ---------------------------------
 
     if text == "⬅️ Назад":
 
-
+        user_mode.pop(user_id, None)
+        document_context.pop(user_id, None)
+        admin_mode.pop(user_id, None)
 
         await update.message.reply_text(
-
             "🏠 Головне меню",
-
             reply_markup=main_keyboard(
-
                 is_admin=is_admin(user_id)
-
             )
-
         )
 
         return
@@ -173,7 +124,7 @@ async def message(
     if text == "📄 Перевірити документ":
 
         user_mode[user_id] = "document"
-
+        
         await update.message.reply_text(
             "Надішліть PDF або DOCX документ."
         )
@@ -287,9 +238,11 @@ async def message(
         )
 
         return
+    
     # ---------------------------------
     # LawAI PRO
     # ---------------------------------
+
     if text == "⭐ LawAI PRO":
 
         user = get_user(user_id)
@@ -499,7 +452,7 @@ async def message(
 
         return
 
-        # ---------------------------------
+    # ---------------------------------
     # Очікування ID для видачі PRO
     # ---------------------------------
 
@@ -559,7 +512,7 @@ async def message(
 
         return
     
-        # ---------------------------------
+    # ---------------------------------
     # Очікування ID для забирання PRO
     # ---------------------------------
 
@@ -682,8 +635,8 @@ async def message(
 
         return
         # ---------------------------------
-            # ---------- Робота з останнім документом ----------
-
+        # ---------- Робота з останнім документом ----------
+        # --------------------------------
     if user_id in document_context:
 
         answer = ask_ai(
@@ -741,8 +694,10 @@ async def message(
 
         return
     
+    # --------------------------------
     # Пошук законів
     # ---------------------------------
+
     if is_law_request(text):
 
         law = parse_law_query(text)
@@ -791,9 +746,6 @@ async def message(
 
         return
 
-
-    
-
     # ---------------------------------
     # Розсилка
     # ---------------------------------
@@ -835,7 +787,7 @@ async def message(
         return
 
 
-   # ---------------------------------
+    # ---------------------------------
     # AI-консультація
     # ---------------------------------
 
@@ -860,10 +812,10 @@ async def message(
             }
         )
 
-    increment_consultations(user_id)
+        increment_consultations(user_id)
 
-    await update.message.reply_text(answer)
+        await update.message.reply_text(answer)
 
-    return
+        return
 
   
