@@ -19,10 +19,9 @@ class LawService:
         article_container = document_parser.get_article_container(html)
 
         if article_container is None:
-            print("article_container = None")
+
             return None
 
-        print("article_container found")
 
         start = article_container.find(
             attrs={"data-tree": f"st{article_number}"}
@@ -32,7 +31,6 @@ class LawService:
             print(f"Article st{article_number} not found")
             return None
 
-        print(f"Article st{article_number} found")
         from bs4 import Tag
 
         text_parts = []

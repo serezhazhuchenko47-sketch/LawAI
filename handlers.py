@@ -8,6 +8,7 @@ from telegram.ext import ContextTypes
 import asyncio
 from ai import ask_ai
 from prompts import GENERATOR_PROMPT
+from services.document_search import DocumentSearch
 
 from database import (
     save_name,
@@ -700,14 +701,34 @@ async def message(
     if is_law_request(text):
 
         law = parse_law_query(text)
-        print(law)
 
-        result = await asyncio.to_thread(
-            legislation_service.get_article,
-            law["article"],
-            law["codex"]
+        if law["type"] == "codex":
+
+            result = await asyncio.to_thread(
+                legislation_service.get_article,
+                law["article"],
+                law["codex"]
             )
-        print("RESULT:", result)
+
+        else:
+
+            law_id = await asyncio.to_thread(
+                DocumentSearch.search_law_by_title,
+                law["title"]
+            )
+
+            if law_id is None:
+                await update.message.reply_text(
+                    "❌ Закон не знайдено."
+                )
+                return
+
+            result = await asyncio.to_thread(
+                legislation_service.get_article,
+                law["article"],
+                law_id
+            )
+
         if result is None:
 
             await update.message.reply_text(
@@ -741,14 +762,12 @@ async def message(
         MAX = 4000
 
         for i in range(0, len(message), MAX):
-
             await update.message.reply_text(
                 message[i:i + MAX],
                 parse_mode="HTML"
             )
 
         return
-
     # ---------------------------------
     # Розсилка
     # ---------------------------------

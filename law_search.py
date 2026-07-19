@@ -4,17 +4,9 @@ from services.codex_registry import CODEXES
 
 
 def parse_law_query(text: str):
-    """
-    Розпізнає запити типу:
-    - ст. 638 ЦКУ
-    - 638 ЦКУ
-    - стаття 1166 Цивільного кодексу
-    """
-
     text_lower = text.lower()
 
-    # ---------- Пошук номера статті ----------
-
+    # Номер статті
     article_match = re.search(
         r"(?:ст\.?|стаття)\s*(\d+)|(\d+)",
         text_lower
@@ -25,26 +17,31 @@ def parse_law_query(text: str):
 
     article = int(article_match.group(1) or article_match.group(2))
 
-    # ---------- Пошук кодексу ----------
-
-    found_codex = None
-
+    # Кодекси
     for codex in CODEXES:
-
         if codex in text_lower:
+            return {
+                "article": article,
+                "type": "codex",
+                "codex": codex
+            }
 
-            found_codex = codex
-            break
+    # Закони
+    law_match = re.search(
+        r'закон(?:у)?(?:\s+україни)?\s*[«"](.+?)[»"]',
+        text,
+        re.IGNORECASE
+    )
 
-    if found_codex is None:
-        return None
+    if law_match:
+        return {
+            "article": article,
+            "type": "law",
+            "title": law_match.group(1).strip()
+        }
 
-    return {
-        "article": article,
-        "codex": found_codex
-    }
+    return None
 
 
-def is_law_request(text: str) -> bool:
-
+def is_law_request(text: str):
     return parse_law_query(text) is not None
