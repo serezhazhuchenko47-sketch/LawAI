@@ -138,16 +138,6 @@ async def message(
     # Головне меню
     # ---------------------------------
 
-    if text == "⚖️ Юридична консультація":
-
-        user_mode[user_id] = "chat"
-
-        await update.message.reply_text(
-            "Опишіть вашу юридичну ситуацію."
-        )
-
-        return
-
     if text == "📄 Перевірити документ":
 
         user_mode[user_id] = "document"
@@ -866,31 +856,28 @@ async def message(
     # AI-консультація
     # ---------------------------------
 
-    if user_mode.get(user_id) == "chat":
+    user_history[user_id].append(
+        {
+            "role": "user",
+            "content": text
+        }
+    )
 
+    answer = ask_ai(
+        user_history[user_id][-20:]
+    )
 
-        user_history[user_id].append(
-            {
-                "role": "user",
-                "content": text
-            }
-        )
+    user_history[user_id].append(
+        {
+            "role": "assistant",
+            "content": answer
+        }
+    )
 
-        answer = ask_ai(
-            user_history[user_id][-20:]
-        )
+    increment_consultations(user_id)
 
-        user_history[user_id].append(
-            {
-                "role": "assistant",
-                "content": answer
-            }
-        )
+    await update.message.reply_text(answer)
 
-        increment_consultations(user_id)
-
-        await update.message.reply_text(answer)
-
-        return
+    return
 
   

@@ -7,7 +7,6 @@ from telegram import ReplyKeyboardMarkup
 def main_keyboard(is_admin=False):
 
     keyboard = [
-        ["⚖️ Юридична консультація"],
         ["📄 Перевірити документ"],
         ["📝 Створити документ"],
         ["📚 Закони України"],
