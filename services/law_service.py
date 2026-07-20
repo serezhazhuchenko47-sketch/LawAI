@@ -6,7 +6,7 @@ from services.document_parser import document_parser
 
 class LawService:
 
-    def get_article(self, law_id: str, article_number: int):
+   def get_article(self, law_id: str, article_number: str):
 
         html = playwright_service.get_html(law_id)
 

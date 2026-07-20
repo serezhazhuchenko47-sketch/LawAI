@@ -1,0 +1,43 @@
+* [33m26a620c[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmain[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m feat(laws): add dynamic search for Ukrainian laws by title
+* [33mec8342e[m Complete legislation module and extend supported codes
+* [33m274d8bb[m Law base1
+* [33mc1a0032[m Law base
+* [33m463db2f[m Add Docker support for Playwright
+* [33mab7014e[m printed codex
+* [33m38f49a1[m Implemented legislation module with Playwright support
+* [33mcffb635[m Implemented legislation module with Playwright support
+* [33m73fcb6c[m Cleanup legislation module
+* [33m5051d25[m Cleanup legislation module
+* [33mc98f1a6[m Stabilize LawAI core
+* [33m8b852fb[m Stabilize bot after removing Cases module
+* [33mb20420a[m Add Cases module (v1)
+* [33m0a8fa2d[m Improve admin panel navigation
+* [33m65aadaf[m Add photo analysis, broadcast and admin improvements
+* [33m2a4db88[m Add broadcast system and complete admin panel
+* [33m8507f49[m Complete PRO management system
+* [33mc37a532[m Admin panel, user profile and statistics
+* [33m63ca565[m Admin panel, user profile and statistics
+* [33mf3d36b5[m Stable handlers and admin panel
+* [33m8a77a20[m Fix get_user query
+* [33m10c92d1[m Fix get_user query
+* [33m6150e46[m Fix get_user query
+* [33mf3fa8f2[m Fix get_user query
+* [33mf66eb26[m Add user profiles and admin panel
+* [33md9a18c8[m Fix railway.json
+* [33m8ba1aa4[m Add Railway deployment
+* [33ma716e4d[m Add deployment configuration
+* [33mcc06b44[m LawAI v1.2 Cleanup: remove experimental files and prepare universal law search
+* [33m82b71e5[m LawAI v1.1 Stable: fixed handlers and document processing
+* [33m3820620[m Покращено шаблон аналізу юридичних документів
+* [33me393c2b[m Покращено генерацію DOCX та усунено обмеження Telegram
+* [33m9e02ad8[m Додано генерацію DOCX документів
+* [33me2d9b99[m Додано генерацію юридичних документів
+* [33m843e0a2[m[33m ([m[1;33mtag: [m[1;33mv1.0[m[33m)[m LawAI v1.0
+* [33m882846c[m Fix name detection
+* [33mf7f0d81[m debug env
+* [33m0d292e1[m Add requirements
+* [33m94e596c[m Add requirements
+*   [33ma3190ab[m Merge GitHub repository
+[32m|[m[33m\[m  
+[32m|[m * [33m09feeae[m Initial commit
+* [33m4187d3d[m Перша версія LawAI

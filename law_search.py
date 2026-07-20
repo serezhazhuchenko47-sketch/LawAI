@@ -8,14 +8,14 @@ def parse_law_query(text: str):
 
     # Номер статті
     article_match = re.search(
-        r"(?:ст\.?|стаття)\s*(\d+)|(\d+)",
-        text_lower
+    r"(?:ст\.?|стаття)\s*(\d+(?:-\d+)?)|(\d+(?:-\d+)?)",
+    text_lower
     )
 
     if article_match is None:
         return None
 
-    article = int(article_match.group(1) or article_match.group(2))
+    article = article_match.group(1) or article_match.group(2)
 
     # Кодекси
     for codex in CODEXES:
