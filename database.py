@@ -196,16 +196,17 @@ def user_exists(user_id: int) -> bool:
     conn = get_connection()
     cursor = conn.cursor()
 
-    cursor.execute(
-        "SELECT 1 FROM users WHERE user_id=?",
-        (user_id,)
-    )
+    cursor.execute("""
+        SELECT name
+        FROM users
+        WHERE user_id=?
+    """, (user_id,))
 
-    exists = cursor.fetchone() is not None
+    row = cursor.fetchone()
 
     conn.close()
 
-    return exists
+    return row is not None and row[0] is not None and row[0].strip() != ""
 
 def increment_consultations(user_id: int):
 

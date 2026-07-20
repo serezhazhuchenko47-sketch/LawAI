@@ -61,19 +61,27 @@ async def start(
     context: ContextTypes.DEFAULT_TYPE
 ):
 
-    create_user(update.effective_user.id)
+    user_id = update.effective_user.id
+
+    if not user_exists(user_id):
+
+        context.user_data["registration"] = True
+
+        await update.message.reply_text(
+            "👋 Вітаю в LawAI!\n\n"
+            "Перед початком роботи необхідно пройти швидку реєстрацію.\n\n"
+            "✍️ Введіть, будь ласка, ваше ім'я."
+        )
+
+        return
 
     await update.message.reply_text(
-        "👋 Вітаю!\n\n"
-        "Я LawAI — юридичний AI-помічник.\n\n"
+        "👋 Раді бачити вас знову!\n\n"
         "Оберіть потрібний розділ нижче 👇",
         reply_markup=main_keyboard(
-            is_admin=is_admin(
-                update.effective_user.id
-            )
+            is_admin=is_admin(user_id)
         )
     )
-
 
 async def message(
     update: Update,
@@ -81,10 +89,28 @@ async def message(
 ):
 
     user_id = update.effective_user.id
-
-    create_user(user_id)
-
     text = update.message.text.strip()
+
+    if context.user_data.get("registration"):
+
+        
+        save_name(user_id, text)
+
+        context.user_data["registration"] = False
+
+        await update.message.reply_text(
+            f"✅ Вітаю, {text}!\n\n"
+            "Реєстрацію успішно завершено."
+        )
+
+        await update.message.reply_text(
+            "Оберіть потрібний розділ нижче 👇",
+            reply_markup=main_keyboard(
+                is_admin=is_admin(user_id)
+            )
+        )
+
+        return
 
     # ---------------------------------
     # Повернення в головне меню
@@ -158,7 +184,7 @@ async def message(
         user = get_user(user_id)
 
         if user is None:
-            create_user(user_id)
+            
             user = get_user(user_id)
 
         if not user["name"] or user["name"] == "Невідомо":
@@ -249,7 +275,7 @@ async def message(
         user = get_user(user_id)
 
         if user is None:
-            create_user(user_id)
+           
             user = get_user(user_id)
 
         if user["tariff"] == "PRO":
