@@ -14,7 +14,7 @@ def ask_ai(history, system_prompt=LAWYER_PROMPT):
     """
     Надсилає історію повідомлень до OpenAI.
     """
-
+    print(system_prompt)
     today = datetime.now().strftime("%d.%m.%Y")
 
     response = client.chat.completions.create(

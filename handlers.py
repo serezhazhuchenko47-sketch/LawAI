@@ -7,7 +7,7 @@ from telegram import Update
 from telegram.ext import ContextTypes
 import asyncio
 from ai import ask_ai
-from prompts import GENERATOR_PROMPT
+from prompts import GENERATOR_PROMPT, FALLBACK_PROMPT
 from services.document_search import DocumentSearch
 
 from database import (
@@ -698,6 +698,7 @@ async def message(
     # --------------------------------
     # Пошук законів
     # ---------------------------------
+   
     if is_law_request(text):
 
         law = parse_law_query(text)
@@ -718,9 +719,23 @@ async def message(
             )
 
             if law_id is None:
-                await update.message.reply_text(
-                    "❌ Закон не знайдено."
+
+                answer = ask_ai(
+                    [
+                        {
+                            "role": "user",
+                            "content": text
+                        }
+                    ],
+                    system_prompt=FALLBACK_PROMPT
                 )
+
+                await update.message.reply_text(
+                    "⚠️ Офіційний нормативний акт не знайдено.\n\n"
+                    "🤖 Нижче наведено відповідь AI.\n\n"
+                    f"{answer}"
+                )
+
                 return
 
             result = await asyncio.to_thread(
@@ -731,8 +746,20 @@ async def message(
 
         if result is None:
 
+            answer = ask_ai(
+                [
+                    {
+                        "role": "user",
+                        "content": text
+                    }
+                ],
+                system_prompt=FALLBACK_PROMPT
+            )  
+
             await update.message.reply_text(
-                "❌ Документ або статтю не знайдено."
+                "⚠️ Офіційний документ або статтю не знайдено.\n\n"
+                "🤖 Нижче наведено відповідь AI.\n\n"
+                f"{answer}"
             )
 
             return

@@ -27,19 +27,23 @@ def parse_law_query(text: str):
             }
 
     # Закони
+    # Закон у лапках або без лапок
     law_match = re.search(
-        r'закон(?:у)?(?:\s+україни)?\s*[«"](.+?)[»"]',
+        r'(?:закон(?:у)?(?:\s+україни)?|зу)\s*(?:[«"](.+?)[»"]|(.+))',
         text,
         re.IGNORECASE
     )
 
     if law_match:
+        title = (law_match.group(1) or law_match.group(2)).strip()
+        title = re.sub(r"\s+", " ", title)
+
         return {
             "article": article,
             "type": "law",
-            "title": law_match.group(1).strip()
+            "title": title
         }
-
+    print(title)
     return None
 
 
