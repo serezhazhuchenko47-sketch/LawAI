@@ -43,7 +43,7 @@ def parse_law_query(text: str):
             "type": "law",
             "title": title
         }
-    print(title)
+  
     return None
 
 

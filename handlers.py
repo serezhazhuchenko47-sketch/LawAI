@@ -9,6 +9,7 @@ import asyncio
 from ai import ask_ai
 from prompts import GENERATOR_PROMPT, FALLBACK_PROMPT
 from services.document_search import DocumentSearch
+from search.kmu_search import is_kmu_request, search_kmu
 
 from database import (
     save_name,
@@ -93,7 +94,7 @@ async def message(
 
     if context.user_data.get("registration"):
 
-        
+        create_user(user_id)
         save_name(user_id, text)
 
         context.user_data["registration"] = False
@@ -851,6 +852,20 @@ async def message(
 
         return
 
+
+    # ---------------------------------
+    # Пошук постанов КМУ
+    # ---------------------------------
+
+    if is_kmu_request(text):
+
+        result = search_kmu(text)
+
+        await update.message.reply_text(
+            f"📄 {result['title']}\n\n{result['url']}"
+        )
+
+        return
 
     # ---------------------------------
     # AI-консультація
