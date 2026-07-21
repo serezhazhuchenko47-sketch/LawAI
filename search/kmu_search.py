@@ -77,6 +77,20 @@ def search_kmu(query: str):
         # save_cache(query, result)
         # return result
 
+    
+    except json.JSONDecodeError as e:
+        print("JSON ERROR")
+        print(response.output_text)
+        print(e)
+
+        return {
+            "title": "⚠️ OpenAI повернув некоректний JSON.",
+            "url": "",
+            "document_type": "",
+            "number": "",
+            "date": ""
+        }
+
     except Exception as e:
 
         print(type(e).__name__)
