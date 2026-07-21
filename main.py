@@ -10,6 +10,7 @@ from telegram.ext import (
 
 from config import TOKEN
 from database import init_db
+from cache import init_cache
 from handlers import start, message
 from document_handlers import handle_document
 from photo_handlers import handle_photo
@@ -32,6 +33,8 @@ def main():
 
     # Ініціалізація бази
     init_db()
+    # Ініціалізація кешу
+    init_cache()
 
     # Створення Telegram Application
     app = (

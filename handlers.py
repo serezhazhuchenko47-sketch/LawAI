@@ -861,6 +861,31 @@ async def message(
 
         result = search_kmu(text)
 
+        # Якщо знайдено декілька документів
+        if isinstance(result, list):
+
+            message = "📚 Знайдено декілька документів:\n\n"
+
+            for i, doc in enumerate(result, start=1):
+                message += (
+                    f"{i}. {doc['document_type']} №{doc['number']}\n"
+                    f"📅 {doc['date']}\n"
+                    f"📄 {doc['title']}\n"
+                    f"🔗 {doc['url']}\n\n"
+                )
+
+            message += (
+                "✍️ Якщо потрібен конкретний документ, "
+                "уточніть рік або дату.\n\n"
+                "Наприклад:\n"
+                "• ПКМУ 76 2023\n"
+                "• ПКМУ 76 2026"
+            )
+
+            await update.message.reply_text(message)
+            return
+
+        # Якщо знайдено один документ або повернулась помилка
         await update.message.reply_text(
             f"📄 {result['title']}\n\n{result['url']}"
         )

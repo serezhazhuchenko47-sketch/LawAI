@@ -1,7 +1,13 @@
 from openai import OpenAI
 from config import OPENAI_API_KEY
+from cache import get_cache, save_cache
+import json
 
-client = OpenAI(api_key=OPENAI_API_KEY)
+client = OpenAI(
+    api_key=OPENAI_API_KEY,
+    timeout=500,
+    max_retries=0
+)
 
 
 def is_kmu_request(text: str) -> bool:
@@ -10,10 +16,19 @@ def is_kmu_request(text: str) -> bool:
         "кму" in text
         or "пкму" in text
         or "постанова кабінету міністрів" in text
+        or "постанова кабміна" in text
+        or "постанова кму" in text
     )
 
 
 def search_kmu(query: str):
+    # Перевіряємо кеш
+    cached = get_cache(query)
+
+    if cached:
+        print("✅ CACHE")
+        return cached
+
     try:
         response = client.responses.create(
             model="gpt-5",
@@ -22,42 +37,55 @@ def search_kmu(query: str):
                     "type": "web_search"
                 }
             ],
-            input=query
+            instructions="""
+Ти юридичний пошуковий модуль LawAI.
+
+Правила:
+
+1. Шукай офіційний документ на zakon.rada.gov.ua.
+2. Якщо користувач вказав лише номер постанови КМУ — спочатку знайди найбільш актуальну чинну постанову.
+3. Якщо існує кілька постанов з однаковим номером — поверни короткий список (номер, дата, назва), а не став загальні уточнюючі питання.
+4. Повертай тільки JSON.
+5. Не використовуй markdown.
+6. Не додавай пояснень.
+
+Формат відповіді:
+
+{
+    "title": "...",
+    "url": "...",
+    "document_type": "...",
+    "number": "...",
+    "date": "..."
+}
+""",
+            input=f"""
+Запит:
+{query}
+"""
         )
 
         print(response.output_text)
-        response = client.responses.create(
-            model="gpt-5",
-            tools=[{"type": "web_search"}],
-            input=f"""
-        Знайди офіційний документ на zakon.rada.gov.ua.
-
-        Запит:
-        {query}
-
-        ВАЖЛИВО:
-        Поверни ВИКЛЮЧНО JSON.
-        Без пояснень.
-        Без markdown.
-
-        Формат:
-
-        {{
-            "title": "...",
-            "url": "...",
-            "document_type": "...",
-            "number": "...",
-            "date": "..."
-        }}
-        """
-        )
-
-        import json
 
         result = json.loads(response.output_text)
+
+        save_cache(query, result)
+
         return result
+    
+        # result = json.loads(response.output_text)
+        # save_cache(query, result)
+        # return result
 
     except Exception as e:
+
         print(type(e).__name__)
         print(e)
-        raise
+
+        return {
+            "title": "⚠️ Сервіс пошуку тимчасово недоступний (rada.gov.ua). Спробуйте ще раз через хвилину.",
+            "url": "",
+            "document_type": "",
+            "number": "",
+            "date": ""
+        }
