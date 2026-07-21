@@ -16,7 +16,7 @@ def is_kmu_request(text: str) -> bool:
         "кму" in text
         or "пкму" in text
         or "постанова кабінету міністрів" in text
-        or "постанова кабміна" in text
+        or "постанова кабміну" in text
         or "постанова кму" in text
     )
 
